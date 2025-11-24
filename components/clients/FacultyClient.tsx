@@ -35,7 +35,7 @@ export default function FacultyClient() {
     useState<FacultyValues & { _id?: string } | null>(null);
 
   // Fetch Faculties
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     `${process.env.NEXT_PUBLIC_API_URL}/api/faculty`,
     fetcher
   );

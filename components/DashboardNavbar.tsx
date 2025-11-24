@@ -5,7 +5,6 @@ import { api } from '@/lib/api'
 import { HelpCircle, Mail, Phone } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import clsx from 'clsx'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'
 import { mutate as globalMutate } from 'swr'
@@ -43,8 +42,6 @@ export default function DashboardNavbar() {
       setLoading(false)
     }
   }
-
-  const isActive = (path: string) => pathname === path
 
   return (
 <header

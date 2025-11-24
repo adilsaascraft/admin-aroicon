@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
           {success && <p className="text-sm text-green-600">{success}</p>}
 
           {/* Submit Button */}
-          <button
+          <Button
             type="submit"
             disabled={isLoading}
             className={`
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
             ) : (
               'Send Reset Link'
             )}
-          </button>
+          </Button>
         </form>
 
         <div

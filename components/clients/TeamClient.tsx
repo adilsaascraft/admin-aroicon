@@ -34,7 +34,7 @@ export default function TeamClient() {
     useState<TeamFormValues & { _id?: string } | null>(null);
 
   // Fetch teams
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/teams`,
     fetcher
   );

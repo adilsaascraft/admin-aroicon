@@ -65,7 +65,7 @@ export function LoginForm() {
       setValidated(true);
 
       // redirect after validation animation
-      setTimeout(() => router.push("/dashboard"), 900);
+      setTimeout(() => router.push("/faculty"), 900);
 
     } catch (error) {
       setError("password", { message: "Something went wrong. Try again." });
@@ -132,7 +132,7 @@ export function LoginForm() {
               {/* Checkbox */}
             <div className="flex items-center gap-2">
               <Input type="checkbox" className="w-4 h-4 accent-orange-600" {...register("robot")} />
-              <Label className="text-sm text-gray-600">I'm not a robot</Label>
+              <Label className="text-sm text-gray-600">I am not a robot</Label>
             </div>
             {errors.robot && <p className="text-red-600 text-sm">{errors.robot.message}</p>}
             {/* Submit Button */}
