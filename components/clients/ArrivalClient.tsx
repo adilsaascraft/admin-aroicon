@@ -156,7 +156,7 @@ export default function ArrivalClient() {
                 <AlertDialogDescription>
                   This will permanently delete{" "}
                   <span className="font-semibold">{row.original.facultyName}</span>
-                  's arrival entry.
+                  &apos s arrival entry.
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
