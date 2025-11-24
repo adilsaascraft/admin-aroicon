@@ -1,77 +1,78 @@
 'use client';
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {useState } from 'react'
-import { loginSchema, LoginFormData } from '@/validations/loginSchema'
-import Image from 'next/image'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Eye, EyeOff , CheckCircle} from 'lucide-react'
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { loginSchema, LoginFormData } from '@/validations/loginSchema';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 export function LoginForm() {
   const router = useRouter();
   const [validated, setValidated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // 🔥 Custom loading state (important)
+  const [loading, setLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isLoading },
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", robot: false }
-  })
+    defaultValues: { email: '', password: '', robot: false },
+  });
 
-// ===========================================================
+  // ===========================================================
   // 🎯 LOGIN HANDLER — save accessToken to localStorage
   // ===========================================================
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginFormData) => {
     try {
       setValidated(false);
+      setLoading(true); // start loading
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/users/login`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // refreshToken cookie stored automatically
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             email: data.email,
-            password: data.password
-          })
+            password: data.password,
+          }),
         }
       );
 
       const result = await res.json();
 
       if (!res.ok) {
-        setError("password", { message: result?.message || "Invalid credentials" });
+        setLoading(false);
+        setError('password', { message: result?.message || 'Invalid credentials' });
         return;
       }
 
-      // ================================
-      // ⭐ SAVE ACCESS TOKEN (VERY IMPORTANT)
-      // ================================
+      // Save token
       if (result.accessToken) {
-        localStorage.setItem("accessToken", result.accessToken);
+        localStorage.setItem('accessToken', result.accessToken);
       }
 
-      // success animation
-      setValidated(true);
+      setValidated(true); // show green validated button
 
-      // redirect after validation animation
-      setTimeout(() => router.push("/faculty"), 900);
-
+      // Wait 1s → redirect
+      setTimeout(() => router.push('/faculty'), 1500);
     } catch (error) {
-      setError("password", { message: "Something went wrong. Try again." });
+      setLoading(false);
+      setError('password', { message: 'Something went wrong. Try again.' });
     }
   };
-
 
   return (
     <div className={cn('flex flex-col gap-6')}>
@@ -86,8 +87,11 @@ export function LoginForm() {
                 </p>
               </div>
 
+              {/* Email */}
               <div className="grid gap-3">
-                <Label htmlFor="email" className='text-black'>Email</Label>
+                <Label htmlFor="email" className="text-black">
+                  Email
+                </Label>
                 <Input
                   type="email"
                   className="w-full text-black !bg-gray-100"
@@ -99,9 +103,12 @@ export function LoginForm() {
                 )}
               </div>
 
+              {/* Password */}
               <div className="grid gap-3 relative">
                 <div className="flex items-center">
-                  <Label htmlFor="password" className='text-black'>Password</Label>
+                  <Label htmlFor="password" className="text-black">
+                    Password
+                  </Label>
                   <a
                     href="/forgot-password"
                     className="ml-auto text-sm underline-offset-2 hover:underline text-black"
@@ -109,12 +116,14 @@ export function LoginForm() {
                     Forgot your password?
                   </a>
                 </div>
+
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   className="w-full pr-10 text-black !bg-gray-100"
                   placeholder="Enter your password"
                   {...register('password')}
                 />
+
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -122,44 +131,56 @@ export function LoginForm() {
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
+
                 {errors.password && (
-                  <p className="text-red-500 text-sm">
-                    {errors.password.message}
-                  </p>
+                  <p className="text-red-500 text-sm">{errors.password.message}</p>
                 )}
               </div>
 
-              {/* Checkbox */}
-            <div className="flex items-center gap-2">
-              <Input type="checkbox" className="w-4 h-4 accent-orange-600" {...register("robot")} />
-              <Label className="text-sm text-gray-600">I am not a robot</Label>
-            </div>
-            {errors.robot && <p className="text-red-600 text-sm">{errors.robot.message}</p>}
-            {/* Submit Button */}
-              <Button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full text-white flex items-center justify-center gap-2 ${
-                validated ? "bg-green-600 hover:bg-green-700" : "bg-orange-600 hover:bg-orange-700"
-              }`}
-            >
-              {validated ? (
-                <>
-                  <CheckCircle className="w-5 h-5 text-white" /> Validated
-                </>
-              ) : isLoading ? (
-                "Validating....."
-              ) : (
-                "Login"
+              {/* Robot Checkbox */}
+              <div className="flex items-center gap-2">
+                <Input
+                  type="checkbox"
+                  className="w-4 h-4 accent-orange-600"
+                  {...register('robot')}
+                />
+                <Label className="text-sm text-gray-600">I am not a robot</Label>
+              </div>
+              {errors.robot && (
+                <p className="text-red-600 text-sm">{errors.robot.message}</p>
               )}
-            </Button>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={loading || validated}
+                className={`w-full text-white flex items-center justify-center gap-2 ${
+                  validated
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-orange-600 hover:bg-orange-700'
+                }`}
+              >
+                {validated ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-white" /> Validated
+                  </>
+                ) : loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
+                    Validating...
+                  </span>
+                ) : (
+                  'Login'
+                )}
+              </Button>
             </div>
           </form>
 
+          {/* Right Side Image */}
           <div className="bg-muted relative hidden md:block">
             <Image
               src="https://res.cloudinary.com/dymanaa1j/image/upload/v1763972311/ChatGPT_Image_Nov_24_2025_01_45_49_PM_1_rkdmrn.png"
-              alt="Image"
+              alt="Login Illustration"
               className="object-cover h-full w-full"
               width={500}
               height={500}
@@ -172,5 +193,5 @@ export function LoginForm() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

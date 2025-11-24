@@ -1,13 +1,17 @@
 "use client"
 import { useEffect, useState } from "react"
 
+// Orange shades from 100 → 900
 const colors = [
-  "border-sky-400",
-  "border-sky-500",
-  "border-sky-600",
-  "border-sky-700",
-  "border-sky-800",
-  "border-sky-900",
+  "border-orange-100",
+  "border-orange-200",
+  "border-orange-300",
+  "border-orange-400",
+  "border-orange-500",
+  "border-orange-600",
+  "border-orange-700",
+  "border-orange-800",
+  "border-orange-900",
 ]
 
 export default function Loading() {
@@ -30,8 +34,8 @@ export default function Loading() {
         ></div>
 
         {/* Fixed Center Text */}
-        <span className="text-sky-800 font-bold text-center text-lg z-10">
-          AIG Academics
+        <span className="text-orange-800 font-bold text-center text-lg z-10">
+          AROICON 2025 KOLKATA
         </span>
       </div>
     </div>
