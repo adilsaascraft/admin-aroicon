@@ -21,12 +21,8 @@ const francoisOne = Francois_One({
 })
 
 export const metadata: Metadata = {
-  title: 'AIG Event Software',
-  description: 'Admin panel for managing AIG Events',
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-  },
+  title: 'ARICON Admin Panel',
+  description: 'Admin panel for managing ARICON operations',
 }
 
 export default function RootLayout({
@@ -36,13 +32,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Extra favicons for various devices */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico" />
-      </head>
       <body
         className={`${poppins.variable} ${francoisOne.variable} font-sans antialiased flex h-screen flex-col bg-background text-foreground`}
       >

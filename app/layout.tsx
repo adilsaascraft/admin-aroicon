@@ -21,8 +21,8 @@ const francoisOne = Francois_One({
 })
 
 export const metadata: Metadata = {
-  title: 'AIG Event Software',
-  description: 'Admin panel for managing AIG Events',
+  title: 'AROICON 2025 Admin Panel',
+  description: 'Admin panel for managing AROICON 2025 event',
 }
 
 export default function RootLayout({

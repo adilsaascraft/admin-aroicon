@@ -2,9 +2,11 @@
 
 import { useState, useMemo } from "react";
 import useSWR from "swr";
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,98 +19,92 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import AddFacultyForm from "@/components/forms/AddFacultyForm";
+import AddSessionForm from "@/components/forms/AddSessionForm";
 import { DataTable } from "@/components/DataTable";
-import { FacultyValues } from "@/validations/facultySchema";
+import { SessionValues } from "@/validations/sessionSchema";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+
 import { toast } from "sonner";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { fetcher } from "@/lib/fetcher";
+import { apiRequest } from "@/lib/apiHelper";
 import EntitySkeleton from "../EntitySkeleton";
 import { getIndianFormattedDate } from "@/lib/formatIndianDate";
 
-export default function FacultyClient() {
+export default function HotelClient() {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingFaculty, setEditingFaculty] =
-    useState<FacultyValues & { _id?: string } | null>(null);
+  const [editingSession, setEditingSession] =
+    useState<SessionValues & { _id?: string } | null>(null);
 
-  // Fetch Faculties
+  // 🔥 Fetch Hotels
   const { data, isLoading, mutate } = useSWR(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/faculty`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/hotel-details`,
     fetcher
   );
 
-  const facultyList: (FacultyValues & { _id: string })[] = useMemo(
+  const sessionList: (SessionValues & { _id: string })[] = useMemo(
     () => data?.data ?? [],
     [data]
   );
 
-  // Add
+  // ➕ Add
   const handleAdd = () => {
-    setEditingFaculty(null);
+    setEditingSession(null);
     setSheetOpen(true);
   };
 
-  // Edit
-  const handleEdit = (faculty: FacultyValues & { _id: string }) => {
-    setEditingFaculty(faculty);
+  // ✏ Edit
+  const handleEdit = (session: SessionValues & { _id: string }) => {
+    setEditingSession(session);
     setSheetOpen(true);
   };
 
-  // Save (POST / PUT)
-  const handleSave = async (formData: FacultyValues & { _id?: string }) => {
+  // 💾 Save
+  const handleSave = async (formData: SessionValues & { _id?: string }) => {
     try {
-      const isEdit = Boolean(formData._id);
+      if (formData._id) {
+        await apiRequest(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/hotel-details/${formData._id}`,
+          "PUT",
+          formData
+        );
+      } else {
+        await apiRequest(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/hotel-details`,
+          "POST",
+          formData
+        );
+      }
 
-      const url = isEdit
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/faculty/${formData._id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/faculty`;
-
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await fetchWithAuth(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const saved = await res.json();
-      if (!res.ok)
-        throw new Error(saved.message || `${isEdit ? "Update" : "Create"} failed`);
-
-      toast.success(isEdit ? "Faculty updated" : "Faculty created");
+      await mutate();
       setSheetOpen(false);
-      setEditingFaculty(null);
-      mutate();
+      setEditingSession(null);
     } catch (err: any) {
       toast.error(err.message);
     }
   };
 
-  // Delete
+  // 🗑 Delete
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetchWithAuth(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/faculty/${id}`,
-        { method: "DELETE" }
+      await apiRequest(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/hotel-details/${id}`,
+        "DELETE"
       );
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Delete failed");
 
-      toast.warning("Faculty deleted successfully!", {
+      toast.warning("Session record deleted successfully!", {
         description: getIndianFormattedDate(),
       });
 
-      mutate();
+      await mutate();
     } catch (err: any) {
       toast.error(err.message);
     }
   };
 
-  // Table Columns
-  const columns: ColumnDef<FacultyValues & { _id: string }>[] = [
+  // 📄 Table Columns (match HotelSchema)
+  const columns: ColumnDef<SessionValues & { _id: string }>[] = [
     {
       id: "select",
       header: ({ table }) => (
@@ -125,43 +121,64 @@ export default function FacultyClient() {
       ),
       enableSorting: false,
     },
+
     {
       accessorKey: "facultyName",
       header: sortableHeader("Faculty Name"),
     },
     {
-      accessorKey: "email",
-      header: sortableHeader("Email"),
+      accessorKey: "sessionTopicName",
+      header: sortableHeader("Session Topic Name"),
     },
     {
-      accessorKey: "mobile",
-      header: sortableHeader("Mobile"),
+      accessorKey: "sessionDate",
+      header: sortableHeader("Session Date"),
     },
+    {
+      accessorKey: "sessionStartTime",
+      header: sortableHeader("Start Time"),
+    },
+    {
+      accessorKey: "sessionEndTime",
+      header: sortableHeader("End Time"),
+    },
+
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleEdit(row.original)}>
+          {/* Edit */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(row.original)}
+          >
             Edit
           </Button>
 
+          {/* Delete */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button className="bg-sky-800 hover:bg-sky-900" size="sm">
                 Delete
               </Button>
             </AlertDialogTrigger>
+
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete{" "}
-                  <span className="font-semibold">{row.original.facultyName}</span>.
+                  This will permanently delete hotel entry of{" "}
+                  <span className="font-semibold">
+                    {row.original.facultyName}
+                  </span>.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
+
                 <AlertDialogAction
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={() => handleDelete(row.original._id)}
@@ -176,30 +193,36 @@ export default function FacultyClient() {
     },
   ];
 
-  if (isLoading) return <EntitySkeleton title="Faculty" />;
+  if (isLoading) return <EntitySkeleton title="Sessions" />;
 
   return (
     <div className="bg-background text-foreground">
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">All Faculties</h1>
-        <Button onClick={handleAdd} className="bg-orange-500 text-white hover:bg-orange-600">
-          + Add Faculty
+        <h1 className="text-2xl font-bold">Faculty Hall Session</h1>
+
+        <Button
+          onClick={handleAdd}
+          className="bg-orange-500 text-white hover:bg-orange-600"
+        >
+          + Add Hall Session
         </Button>
       </div>
 
-      {/* TABLE WITHOUT TABS (FULL RAW LIST) */}
-      <DataTable data={facultyList} columns={columns} />
+      {/* Table */}
+      <DataTable data={sessionList} columns={columns} />
 
       {/* Drawer */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-[500px] sm:w-[600px]">
           <div className="p-4 border-b">
             <h2 className="text-xl font-semibold">
-              {editingFaculty ? "Edit Faculty" : "Add Faculty"}
+              {editingSession ? "Edit Session " : "Add Session"}
             </h2>
           </div>
-          <AddFacultyForm
-            defaultValues={editingFaculty || undefined}
+
+          <AddSessionForm
+            defaultValues={editingSession || undefined}
             onSave={handleSave}
           />
         </SheetContent>
@@ -208,11 +231,15 @@ export default function FacultyClient() {
   );
 }
 
+// Sortable header helper
 function sortableHeader(label: string) {
   const HeaderComponent = ({ column }: any) => {
     const sorted = column.getIsSorted();
     return (
-      <Button variant="ghost" onClick={() => column.toggleSorting(sorted === "asc")}>
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(sorted === "asc")}
+      >
         {label}
         {sorted === "asc" && <ArrowUp className="h-4 w-4 ml-2" />}
         {sorted === "desc" && <ArrowDown className="h-4 w-4 ml-2" />}
@@ -220,6 +247,7 @@ function sortableHeader(label: string) {
       </Button>
     );
   };
+
   HeaderComponent.displayName = `SortableHeader(${label})`;
   return HeaderComponent;
 }

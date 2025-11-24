@@ -18,6 +18,9 @@ export const TeamFormSchema = z.object({
     .min(10, 'Mobile number must be 10 digits.')
     .max(10, 'Mobile number must be 10 digits.')
     .regex(/^\d{10}$/, 'Mobile number must contain only digits.'),
+  items: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: "You have to select at least one module.",
+  }),
 });
 
 export type TeamFormValues = z.infer<typeof TeamFormSchema>;

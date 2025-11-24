@@ -206,7 +206,7 @@ export default function AddFacultyForm({
           type="submit"
           form="faculty-form"
           disabled={loading}
-          className="bg-sky-800 text-white hover:bg-sky-900"
+          className="bg-orange-500 text-white hover:bg-orange-600"
         >
           {loading
             ? defaultValues?._id

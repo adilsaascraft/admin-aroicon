@@ -14,8 +14,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
+  items,
 } from "@/lib/imports";
-
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Button,
   SheetClose,
@@ -39,6 +41,7 @@ export default function AddTeamForm({ defaultValues, onSave }: AddTeamFormProps)
       name: "",
       email: "",
       mobile: "",
+      items: [],
     },
   });
 
@@ -69,7 +72,7 @@ export default function AddTeamForm({ defaultValues, onSave }: AddTeamFormProps)
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || "Failed to save team");
 
-      toast(
+      toast.success(
         isEdit
           ? "Team updated successfully!"
           : "Team created successfully!",
@@ -90,7 +93,7 @@ export default function AddTeamForm({ defaultValues, onSave }: AddTeamFormProps)
   // -------------------- UI ------------------------
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex-1 overflow-y-auto custom-scroll">
+      <div className="flex-1 overflow-y-auto custom-scroll mb-20">
         <Form {...form}>
           <form
             id="add-team-form"
@@ -160,6 +163,55 @@ export default function AddTeamForm({ defaultValues, onSave }: AddTeamFormProps)
                 </FormItem>
               )}
             />
+            {/* Items Checkboxes */}
+                        <FormField
+                          control={form.control}
+                          name="items"
+                          render={() => (
+                            <FormItem>
+                              <div className="mb-2">
+                                <FormLabel className="text-base">All Modules *</FormLabel>
+                                <FormDescription>
+                                  Select the module(s) you want to give access to{" "} <span className="text-sky-800 hover:text-sky-900 font-bold">Check-in Team</span>{" "}.
+                                </FormDescription>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {items.map((item) => (
+                                  <FormField
+                                    key={item.id}
+                                    control={form.control}
+                                    name="items"
+                                    render={({ field }) => (
+                                      <FormItem
+                                        key={item.id}
+                                        className="flex flex-row items-center space-x-2 border border-gray-200 p-2 rounded-md hover:bg-gray-50 transition"
+                                      >
+                                        <FormControl>
+                                          <Checkbox
+                                            checked={field.value?.includes(item.id)}
+                                            onCheckedChange={(checked) => {
+                                              return checked
+                                                ? field.onChange([...field.value, item.id])
+                                                : field.onChange(
+                                                    field.value?.filter(
+                                                      (v) => v !== item.id
+                                                    )
+                                                  );
+                                            }}
+                                          />
+                                        </FormControl>
+                                        <FormLabel className="text-sm font-medium cursor-pointer">
+                                          {item.label}
+                                        </FormLabel>
+                                      </FormItem>
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
           </form>
         </Form>
       </div>
@@ -181,7 +233,7 @@ export default function AddTeamForm({ defaultValues, onSave }: AddTeamFormProps)
           type="submit"
           form="add-team-form"
           disabled={loading}
-          className="bg-sky-800 text-white hover:bg-sky-900"
+          className="bg-orange-500 text-white hover:bg-orange-600"
         >
           {loading
             ? defaultValues?._id

@@ -89,7 +89,7 @@ export default function TeamClient() {
         "DELETE"
       );
 
-      toast("Team deleted successfully!", {
+      toast.success("Team deleted successfully!", {
         description: getIndianFormattedDate(),
       });
 
@@ -181,7 +181,7 @@ export default function TeamClient() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Teams</h1>
 
-        <Button onClick={handleAdd} className="bg-sky-800 text-white hover:bg-sky-900">
+        <Button onClick={handleAdd} className="bg-orange-500 text-white hover:bg-orange-600">
           + Add Team
         </Button>
       </div>

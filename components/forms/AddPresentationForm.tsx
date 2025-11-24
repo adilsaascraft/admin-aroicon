@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { HotelSchema, HotelValues } from "@/validations/hotelSchema";
+import { PresentationSchema, PresentationValues } from "@/validations/presentationSchema";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 import {
@@ -23,22 +23,23 @@ import { CustomDatePicker, CustomTimePicker, toast } from "@/lib/imports";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { getIndianFormattedDate } from "@/lib/formatIndianDate";
 
-type AddHotelFormProps = {
-  defaultValues?: HotelValues & { _id?: string };
-  onSave: (formData: HotelValues & { _id?: string }) => Promise<void>;
+type AddPresentationFormProps = {
+  defaultValues?: PresentationValues & { _id?: string };
+  onSave: (formData: PresentationValues & { _id?: string }) => Promise<void>;
 };
 
-export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProps) {
+export default function AddPresentationForm({ defaultValues, onSave }: AddPresentationFormProps) {
   const [loading, setLoading] = useState(false);
   const [facultyList, setFacultyList] = useState<any[]>([]);
 
-  const form = useForm<HotelValues>({
-    resolver: zodResolver(HotelSchema),
+  const form = useForm<PresentationValues>({
+    resolver: zodResolver(PresentationSchema),
     defaultValues: defaultValues || {
       facultyName: "",
-      hotelName: "",
-      checkInDate: "",
-      checkOutDate: "",
+      presentationTopicName: "",
+      presentationDate: "",
+      presentationStartTime: "",
+      presentationEndTime: "",
     },
   });
 
@@ -46,24 +47,24 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
   useEffect(() => {
     const loadFaculty = async () => {
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/faculty`);
+        const res = await fetchWithAuth(`/api/faculty`);
         const data = await res.json();
         setFacultyList(data.data ?? []);
       } catch (error) {
-        console.error("Failed to load faculty", error);
+        console.error("Failed to load faculty list", error);
       }
     };
     loadFaculty();
   }, []);
 
   // Submit Handler
-  async function onSubmit(data: HotelValues & { _id?: string }) {
+  async function onSubmit(data: PresentationValues & { _id?: string }) {
     try {
       setLoading(true);
       await onSave(data);
 
       toast.success(
-        defaultValues?._id ? "Hotel stay updated!" : "Hotel stay added!",
+        defaultValues?._id ? "Presentation updated!" : "Presentation added!",
         { description: getIndianFormattedDate() }
       );
 
@@ -80,7 +81,7 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
       <div className="flex-1 overflow-y-auto custom-scroll">
         <Form {...form}>
           <form
-            id="add-hotel-form"
+            id="add-presentation-form"
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-4 px-3"
           >
@@ -109,17 +110,17 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
               )}
             />
 
-            {/* Hotel Name */}
+            {/* Presentation Topic Name */}
             <FormField
               control={form.control}
-              name="hotelName"
+              name="presentationTopicName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Hotel Name *</FormLabel>
+                  <FormLabel>Presentation Topic *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="Enter hotel name"
+                      placeholder="Enter presentation topic"
                       disabled={loading}
                     />
                   </FormControl>
@@ -128,11 +129,14 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
               )}
             />
 
-            {/* Check-in Date */}
-            <CustomDatePicker name="checkInDate" label="Check-in Date *" />
-            {/* Check-out Date */}
+            {/* Presentation Date */}
+            <CustomDatePicker name="presentationDate" label="Presentation Date *" />
 
-                <CustomDatePicker name="checkOutDate" label="Check-out Date *" />
+            {/* Start Time */}
+            <CustomTimePicker name="presentationStartTime" label="Start Time *" />
+
+            {/* End Time */}
+            <CustomTimePicker name="presentationEndTime" label="End Time *" />
           </form>
         </Form>
       </div>
@@ -147,7 +151,7 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
 
         <Button
           type="submit"
-          form="add-hotel-form"
+          form="add-presentation-form"
           disabled={loading}
           className="bg-orange-500 text-white hover:bg-orange-600"
         >

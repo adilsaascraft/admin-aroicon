@@ -34,7 +34,7 @@ export default function Loading() {
         ></div>
 
         {/* Fixed Center Text */}
-        <span className="text-orange-800 font-bold text-center text-lg z-10">
+        <span className="text-orange-600 font-bold text-center text-lg z-10">
           AROICON 2025 KOLKATA
         </span>
       </div>

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { HotelSchema, HotelValues } from "@/validations/hotelSchema";
+import { SessionSchema, SessionValues } from "@/validations/sessionSchema";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 import {
@@ -23,22 +23,23 @@ import { CustomDatePicker, CustomTimePicker, toast } from "@/lib/imports";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { getIndianFormattedDate } from "@/lib/formatIndianDate";
 
-type AddHotelFormProps = {
-  defaultValues?: HotelValues & { _id?: string };
-  onSave: (formData: HotelValues & { _id?: string }) => Promise<void>;
+type AddSessionFormProps = {
+  defaultValues?: SessionValues & { _id?: string };
+  onSave: (formData: SessionValues & { _id?: string }) => Promise<void>;
 };
 
-export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProps) {
+export default function AddSessionForm({ defaultValues, onSave }: AddSessionFormProps) {
   const [loading, setLoading] = useState(false);
   const [facultyList, setFacultyList] = useState<any[]>([]);
 
-  const form = useForm<HotelValues>({
-    resolver: zodResolver(HotelSchema),
+  const form = useForm<SessionValues>({
+    resolver: zodResolver(SessionSchema),
     defaultValues: defaultValues || {
       facultyName: "",
-      hotelName: "",
-      checkInDate: "",
-      checkOutDate: "",
+      sessionTopicName: "",
+      sessionDate: "",
+      sessionStartTime: "",
+      sessionEndTime: "",
     },
   });
 
@@ -50,20 +51,20 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
         const data = await res.json();
         setFacultyList(data.data ?? []);
       } catch (error) {
-        console.error("Failed to load faculty", error);
+        console.error("Failed to load session", error);
       }
     };
     loadFaculty();
   }, []);
 
   // Submit Handler
-  async function onSubmit(data: HotelValues & { _id?: string }) {
+  async function onSubmit(data: SessionValues & { _id?: string }) {
     try {
       setLoading(true);
       await onSave(data);
 
       toast.success(
-        defaultValues?._id ? "Hotel stay updated!" : "Hotel stay added!",
+        defaultValues?._id ? "Session updated!" : "Session added!",
         { description: getIndianFormattedDate() }
       );
 
@@ -112,14 +113,14 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
             {/* Hotel Name */}
             <FormField
               control={form.control}
-              name="hotelName"
+              name="sessionTopicName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Hotel Name *</FormLabel>
+                  <FormLabel>Session Topic Name *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="Enter hotel name"
+                      placeholder="Enter session topic name"
                       disabled={loading}
                     />
                   </FormControl>
@@ -128,11 +129,10 @@ export default function AddHotelForm({ defaultValues, onSave }: AddHotelFormProp
               )}
             />
 
-            {/* Check-in Date */}
-            <CustomDatePicker name="checkInDate" label="Check-in Date *" />
-            {/* Check-out Date */}
-
-                <CustomDatePicker name="checkOutDate" label="Check-out Date *" />
+            {/* Check-in Date & Time */}
+                <CustomDatePicker name="sessionDate" label="Session Date *" />
+                <CustomTimePicker name="sessionStartTime" label="Session Start Time *" />
+                <CustomTimePicker name="sessionEndTime" label="Session End Time *" />
           </form>
         </Form>
       </div>

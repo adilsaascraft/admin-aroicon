@@ -3,7 +3,7 @@
 
 import FacultyClient from "@/components/clients/FacultyClient";
 
-export default function OrganizerPage() {
+export default function FacultyPage() {
   return (
     <div className="p-4">
       <FacultyClient />

@@ -17,71 +17,61 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import AddFacultyForm from "@/components/forms/AddFacultyForm";
+import AddArrivalForm from "@/components/forms/AddArrivalForm";
 import { DataTable } from "@/components/DataTable";
-import { FacultyValues } from "@/validations/facultySchema";
-
+import { ArrivalValues } from "@/validations/arrivalSchema";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { fetcher } from "@/lib/fetcher";
+import { apiRequest } from "@/lib/apiHelper";
 import EntitySkeleton from "../EntitySkeleton";
 import { getIndianFormattedDate } from "@/lib/formatIndianDate";
 
-export default function FacultyClient() {
+export default function ArrivalClient() {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingFaculty, setEditingFaculty] =
-    useState<FacultyValues & { _id?: string } | null>(null);
+  const [editingArrival, setEditingArrival] =
+    useState<ArrivalValues & { _id?: string } | null>(null);
 
-  // Fetch Faculties
-  const { data, isLoading, mutate } = useSWR(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/faculty`,
+  // Fetch arrivals
+  const { data, error, mutate } = useSWR(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/checkin-details`,
     fetcher
   );
 
-  const facultyList: (FacultyValues & { _id: string })[] = useMemo(
+  const arrivals: (ArrivalValues & { _id: string })[] = useMemo(
     () => data?.data ?? [],
     [data]
   );
 
   // Add
   const handleAdd = () => {
-    setEditingFaculty(null);
+    setEditingArrival(null);
     setSheetOpen(true);
   };
 
   // Edit
-  const handleEdit = (faculty: FacultyValues & { _id: string }) => {
-    setEditingFaculty(faculty);
+  const handleEdit = (arrival: ArrivalValues & { _id: string }) => {
+    setEditingArrival(arrival);
     setSheetOpen(true);
   };
 
-  // Save (POST / PUT)
-  const handleSave = async (formData: FacultyValues & { _id?: string }) => {
+  // Save (create/update)
+  const handleSave = async (formData: ArrivalValues & { _id?: string }) => {
     try {
-      const isEdit = Boolean(formData._id);
+      const base = `${process.env.NEXT_PUBLIC_API_URL}/api/checkin-details`;
+      if (formData._id) {
+        await apiRequest(`${base}/${formData._id}`, "PUT", formData);
+      } else {
+        await apiRequest(base, "POST", formData);
+      }
 
-      const url = isEdit
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/faculty/${formData._id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/faculty`;
-
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await fetchWithAuth(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const saved = await res.json();
-      if (!res.ok)
-        throw new Error(saved.message || `${isEdit ? "Update" : "Create"} failed`);
-
-      toast.success(isEdit ? "Faculty updated" : "Faculty created");
+      await mutate();
       setSheetOpen(false);
-      setEditingFaculty(null);
-      mutate();
+      setEditingArrival(null);
+      toast.success(formData._id ? "Arrival updated" : "Arrival created", {
+        description: getIndianFormattedDate(),
+      });
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -90,59 +80,66 @@ export default function FacultyClient() {
   // Delete
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetchWithAuth(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/faculty/${id}`,
-        { method: "DELETE" }
-      );
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Delete failed");
+      const base = `${process.env.NEXT_PUBLIC_API_URL}/api/checkin-details`;
+      await apiRequest(`${base}/${id}`, "DELETE");
 
-      toast.warning("Faculty deleted successfully!", {
+      toast.warning("Arrival deleted successfully!", {
         description: getIndianFormattedDate(),
       });
 
-      mutate();
+      await mutate();
     } catch (err: any) {
       toast.error(err.message);
     }
   };
 
   // Table Columns
-  const columns: ColumnDef<FacultyValues & { _id: string }>[] = [
+  const columns: ColumnDef<ArrivalValues & { _id: string }>[] = [
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
         />
       ),
       enableSorting: false,
+      enableHiding: false,
     },
     {
       accessorKey: "facultyName",
-      header: sortableHeader("Faculty Name"),
+      header: sortableHeader("Faculty"),
     },
     {
-      accessorKey: "email",
-      header: sortableHeader("Email"),
+      accessorKey: "arrivalDate",
+      header: sortableHeader("Arrival Date"),
     },
     {
-      accessorKey: "mobile",
-      header: sortableHeader("Mobile"),
+      accessorKey: "arrivalTime",
+      header: sortableHeader("Arrival Time"),
+    },
+    {
+      accessorKey: "arrivalFlightDetail",
+      header: sortableHeader("Flight Number"),
     },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleEdit(row.original)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(row.original)}
+          >
             Edit
           </Button>
 
@@ -152,16 +149,20 @@ export default function FacultyClient() {
                 Delete
               </Button>
             </AlertDialogTrigger>
+
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This will permanently delete{" "}
-                  <span className="font-semibold">{row.original.facultyName}</span>.
+                  <span className="font-semibold">{row.original.facultyName}</span>
+                  's arrival entry.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
+
                 <AlertDialogAction
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={() => handleDelete(row.original._id)}
@@ -176,30 +177,34 @@ export default function FacultyClient() {
     },
   ];
 
-  if (isLoading) return <EntitySkeleton title="Faculty" />;
+  const isLoading = !data && !error;
+  if (isLoading) return <EntitySkeleton title="Arrivals" />;
 
   return (
     <div className="bg-background text-foreground">
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">All Faculties</h1>
+        <h1 className="text-2xl font-bold">Arrivals</h1>
+
         <Button onClick={handleAdd} className="bg-orange-500 text-white hover:bg-orange-600">
-          + Add Faculty
+          + Add Arrival
         </Button>
       </div>
 
-      {/* TABLE WITHOUT TABS (FULL RAW LIST) */}
-      <DataTable data={facultyList} columns={columns} />
+      {/* Table */}
+      <DataTable data={arrivals} columns={columns} />
 
-      {/* Drawer */}
+      {/* Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-[500px] sm:w-[600px]">
           <div className="p-4 border-b">
             <h2 className="text-xl font-semibold">
-              {editingFaculty ? "Edit Faculty" : "Add Faculty"}
+              {editingArrival ? "Edit Arrival" : "Add Arrival"}
             </h2>
           </div>
-          <AddFacultyForm
-            defaultValues={editingFaculty || undefined}
+
+          <AddArrivalForm
+            defaultValues={editingArrival || undefined}
             onSave={handleSave}
           />
         </SheetContent>
@@ -208,6 +213,7 @@ export default function FacultyClient() {
   );
 }
 
+// helper to DRY sortable column headers
 function sortableHeader(label: string) {
   const HeaderComponent = ({ column }: any) => {
     const sorted = column.getIsSorted();
@@ -220,6 +226,8 @@ function sortableHeader(label: string) {
       </Button>
     );
   };
+
   HeaderComponent.displayName = `SortableHeader(${label})`;
+
   return HeaderComponent;
 }

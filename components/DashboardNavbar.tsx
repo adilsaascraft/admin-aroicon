@@ -1,65 +1,82 @@
 'use client'
 
 import Image from 'next/image'
-import { api } from '@/lib/api'
 import { HelpCircle, Mail, Phone } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'
-import { mutate as globalMutate } from 'swr'
-
-// ✅ import the new toggle
-import ModeToggle from '@/components/ModeToggle'
+import { 
+  AlertDialog, 
+  AlertDialogTrigger, 
+  AlertDialogContent, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogAction, 
+  AlertDialogCancel 
+} from '@/components/ui/alert-dialog'
+import { Button } from './ui/button'
 
 export default function DashboardNavbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const router = useRouter()
   const dropdownRef = useRef<HTMLDivElement | null>(null)
-  const pathname = usePathname()
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  // ✅ Check login state on load
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    setIsLoggedIn(!!token)
-  }, [])
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    setIsLoggedIn(!!token);
+  }, []);
 
+  // Small animation effect
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timeout);
+  }, []);
+  
+  // LOGOUT
   const handleLogout = async () => {
-    setLoading(true)
     try {
-      await api("/logout", { method: "POST" })
-      localStorage.removeItem("token")
-      localStorage.removeItem("selectedEvent")
-      globalMutate(() => true, undefined, { revalidate: false })
-      setIsLoggedIn(false)
-      setLogoutDialogOpen(false)
-      router.push("/login")
-    } catch (err: any) {
-      console.error("Logout failed:", err.message)
-      alert(err.message || "Logout failed")
-    } finally {
-      setLoading(false)
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+  
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/logout`, {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+  
+      localStorage.removeItem("accessToken");
+
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout failed:", error);
+      localStorage.removeItem("accessToken");
+      window.location.href = "/";
     }
-  }
+  };
 
   return (
 <header
   className="
     text-white
-bg-gradient-to-r
-from-[#FFC085] via-[#FF9F50] to-[#FF7A1F]
-
-dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#444]
-shadow-md
-sticky top-0 z-50
-
+    bg-gradient-to-r
+    from-[#FFC085] via-[#FF9F50] to-[#FF7A1F]
+    dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#444]
+    shadow-md
+    sticky top-0 z-50
   "
 >
       <div className="max-w-full flex items-center justify-between h-16 px-4 md:px-[30px]">
+        
         {/* Left: Logo */}
         <div className="flex items-center">
-          <button onClick={() => router.push('/home')}>
             <Image
               src="https://res.cloudinary.com/dymanaa1j/image/upload/v1763966137/ChatGPT_Image_Nov_24_2025_12_04_23_PM_pfrqzq.png"
               alt="Logo"
@@ -67,15 +84,12 @@ sticky top-0 z-50
               height={100}
               className="cursor-pointer"
             />
-          </button>
         </div>
 
-        {/* Right: Icons */}
+        {/* Right Side Icons */}
         <div className="flex items-center space-x-4 relative" ref={dropdownRef}>
 
-          {/* ✅ Dark / Light toggle */}
-          <ModeToggle />
-
+          {/* Help Icon */}
           <HoverCard>
             <HoverCardTrigger>
               <HelpCircle size={20} className="cursor-pointer" />
@@ -83,7 +97,7 @@ sticky top-0 z-50
             <HoverCardContent className="text-sm p-4 w-72 rounded-md shadow-lg border border-gray-200 bg-white dark:bg-gray-800 space-y-3">
               <div className="font-semibold text-gray-800 dark:text-gray-100">Need Help?</div>
               <div className="text-gray-600 dark:text-gray-300 text-sm">
-                If you&apos;re facing any issues or need assistance, feel free to reach out:
+                If you’re facing any issues, reach out:
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -102,25 +116,30 @@ sticky top-0 z-50
             </HoverCardContent>
           </HoverCard>
 
+          {/* 🔥 Logout button shows ONLY when logged in */}
           <div className="relative">
             {isLoggedIn && (
               <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
                 <AlertDialogTrigger asChild>
-                  <button className="text-white border border-white text-sm px-4 py-1 rounded-lg font-semibold hover:bg-white hover:text-sky-800 transition">
+                  <Button className="text-white border border-white text-sm px-4 py-1 rounded-lg font-semibold bg-[#FF7A1F] hover:bg-white hover:text-orange-800 transition">
                     Logout
-                  </button>
+                  </Button>
                 </AlertDialogTrigger>
 
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to logout? This will end your session.
+                      Are you sure you want to logout?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleLogout} disabled={loading} className="bg-sky-800 hover:bg-sky-900">
+                    <AlertDialogAction 
+                      onClick={handleLogout} 
+                      disabled={loading} 
+                      className="bg-red-600 hover:bg-red-700"
+                    >
                       {loading ? "Logging out..." : "Confirm"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
